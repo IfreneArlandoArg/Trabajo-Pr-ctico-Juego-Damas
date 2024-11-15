@@ -159,17 +159,7 @@ namespace GUI
         
         }
 
-        //public bool UsuarioRegistrado() 
-        //{ 
-        //    if (Username == "Arlando" && Password == "1998") 
-        //    {
-        //        return true;
-        //    }
-        //    else 
-        //    { 
-        //       return false;
-        //    }
-        //}
+      
 
         private void btnRegister_Click(object sender, EventArgs e)
         {

@@ -2,15 +2,14 @@
 {
     partial class Damas
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.Panel boardPanel;
+        private System.Windows.Forms.Label lblTurno;
+        private System.Windows.Forms.Button btnEndGame;
 
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,27 +21,56 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
+            this.boardPanel = new System.Windows.Forms.Panel();
+            this.lblTurno = new System.Windows.Forms.Label();
+            this.btnEndGame = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // Form1
+            // boardPanel
+            // 
+            this.boardPanel.Location = new System.Drawing.Point(50, 50);
+            this.boardPanel.Name = "boardPanel";
+            this.boardPanel.Size = new System.Drawing.Size(400, 489);
+            this.boardPanel.TabIndex = 0;
+            // 
+            // lblTurno
+            // 
+            this.lblTurno.AutoSize = true;
+            this.lblTurno.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTurno.Location = new System.Drawing.Point(500, 50);
+            this.lblTurno.Name = "lblTurno";
+            this.lblTurno.Size = new System.Drawing.Size(57, 20);
+            this.lblTurno.TabIndex = 1;
+            this.lblTurno.Text = "Turno";
+            // 
+            // btnEndGame
+            // 
+            this.btnEndGame.Location = new System.Drawing.Point(500, 100);
+            this.btnEndGame.Name = "btnEndGame";
+            this.btnEndGame.Size = new System.Drawing.Size(120, 40);
+            this.btnEndGame.TabIndex = 2;
+            this.btnEndGame.Text = "Terminar Juego";
+            this.btnEndGame.UseVisualStyleBackColor = true;
+            this.btnEndGame.Click += new System.EventHandler(this.btnEndGame_Click);
+            // 
+            // Damas
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Name = "Form1";
-            this.Text = "Form1";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.ClientSize = new System.Drawing.Size(700, 588);
+            this.Controls.Add(this.btnEndGame);
+            this.Controls.Add(this.lblTurno);
+            this.Controls.Add(this.boardPanel);
+            this.Name = "Damas";
+            this.Text = "Damas";
+            this.Load += new System.EventHandler(this.Damas_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
     }
 }
-
