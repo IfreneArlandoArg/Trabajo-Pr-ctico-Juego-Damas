@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using BE;
 
+
 namespace DAL
 {
     public class UsuarioDataAccess

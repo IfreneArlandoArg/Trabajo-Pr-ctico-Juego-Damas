@@ -7,6 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using BE;
+using BLL;
+
 
 namespace GUI
 {
@@ -17,6 +20,7 @@ namespace GUI
             InitializeComponent();
         }
 
+        UsuarioBLL usuarioBLL = new UsuarioBLL();
 
         public bool Cancelado { get; set; }
         public bool Registrado { get; set; }
@@ -87,6 +91,28 @@ namespace GUI
         {
             this.Close();
             MessageBox.Show("Cancelado...");
+        }
+
+        private void btnRegister_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (txtUsername.Text == string.Empty || txtPassword.Text == string.Empty)
+                    throw new Exception("Username y/o Password incorrecto!!!");
+
+                Jugador jugador = new Jugador(txtUsername.Text, txtPassword.Text);
+
+                usuarioBLL.RegistrarUsuario(jugador);
+
+                this.Close();
+
+                MessageBox.Show($"{jugador.NombreUsuario} registrado con exito!!!");
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

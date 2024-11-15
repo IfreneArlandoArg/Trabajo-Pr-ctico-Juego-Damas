@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BE;
+using BLL;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,6 +18,8 @@ namespace GUI
         {
             InitializeComponent();
         }
+
+        UsuarioBLL usuarioBLL = new UsuarioBLL();
 
         public bool Cancelado { get; set; }
 
@@ -120,11 +124,16 @@ namespace GUI
             try
             {
 
-                Registrado = UsuarioRegistrado();
+                if (txtUsername.Text == string.Empty || txtPassword.Text == string.Empty)
+                    throw new Exception("Username y/o Password incorrecto!!!");
+
+                Jugador jugador = new Jugador(txtUsername.Text, txtPassword.Text);
+
+                Registrado = usuarioBLL.ValidarCredenciales(jugador.NombreUsuario, jugador.Contraseña);
 
                 if (Registrado)
                 {
-                    MessageBox.Show("Bienvenido Arlando!!!");
+                    MessageBox.Show($"Bienvenido {jugador.NombreUsuario}!!!");
 
                     this.Close();
                 }
@@ -150,17 +159,17 @@ namespace GUI
         
         }
 
-        public bool UsuarioRegistrado() 
-        { 
-            if (Username == "Arlando" && Password == "1998") 
-            {
-                return true;
-            }
-            else 
-            { 
-               return false;
-            }
-        }
+        //public bool UsuarioRegistrado() 
+        //{ 
+        //    if (Username == "Arlando" && Password == "1998") 
+        //    {
+        //        return true;
+        //    }
+        //    else 
+        //    { 
+        //       return false;
+        //    }
+        //}
 
         private void btnRegister_Click(object sender, EventArgs e)
         {
