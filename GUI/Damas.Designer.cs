@@ -1,6 +1,6 @@
 ﻿namespace GUI
 {
-    partial class Form1
+    partial class Damas
     {
         /// <summary>
         /// Required designer variable.
