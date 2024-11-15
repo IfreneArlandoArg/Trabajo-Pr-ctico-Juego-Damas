@@ -17,6 +17,8 @@ namespace GUI
             InitializeComponent();
         }
 
+        public bool Cancelado { get; set; }
+
         public bool Registrado { get; set; }
 
         public int countLogin { get; set; }
@@ -49,6 +51,8 @@ namespace GUI
             btnRegister.Hide();
 
             Registrado = false;
+
+            Cancelado = false;
 
             
         }
@@ -156,6 +160,39 @@ namespace GUI
             { 
                return false;
             }
+        }
+
+        private void btnRegister_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                RegistrarForm Registrar = new RegistrarForm();
+
+                Registrar.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show(ex.Message, "Error!");
+            }
+        }
+
+        private void btnCancelar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Cancelado = true;
+
+                this.Close();
+
+                
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show(ex.Message);
+            }
+            
         }
     }
 }

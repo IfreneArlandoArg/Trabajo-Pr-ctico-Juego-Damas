@@ -28,7 +28,7 @@ namespace GUI
 
 
 
-                while (!login.Registrado )
+                while (!login.Registrado  )
                 {
                     
                     login.ShowDialog();
@@ -39,7 +39,12 @@ namespace GUI
                         break;
                       
                     }
-                        
+
+                    if (login.Cancelado) 
+                    {
+                        this.Close();
+                        break;
+                    }
                     
 
                 }

@@ -37,6 +37,7 @@
             this.chBxRegistrar = new System.Windows.Forms.CheckBox();
             this.btnRegister = new System.Windows.Forms.Button();
             this.chBxVerPassword = new System.Windows.Forms.CheckBox();
+            this.btnCancelar = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.picBxPortada)).BeginInit();
             this.SuspendLayout();
             // 
@@ -92,7 +93,7 @@
             // chBxRegistrar
             // 
             this.chBxRegistrar.AutoSize = true;
-            this.chBxRegistrar.Location = new System.Drawing.Point(133, 421);
+            this.chBxRegistrar.Location = new System.Drawing.Point(128, 474);
             this.chBxRegistrar.Name = "chBxRegistrar";
             this.chBxRegistrar.Size = new System.Drawing.Size(146, 36);
             this.chBxRegistrar.TabIndex = 5;
@@ -102,12 +103,13 @@
             // 
             // btnRegister
             // 
-            this.btnRegister.Location = new System.Drawing.Point(148, 477);
+            this.btnRegister.Location = new System.Drawing.Point(143, 530);
             this.btnRegister.Name = "btnRegister";
             this.btnRegister.Size = new System.Drawing.Size(114, 40);
             this.btnRegister.TabIndex = 6;
             this.btnRegister.Text = "Registrar";
             this.btnRegister.UseVisualStyleBackColor = true;
+            this.btnRegister.Click += new System.EventHandler(this.btnRegister_Click);
             // 
             // chBxVerPassword
             // 
@@ -120,11 +122,22 @@
             this.chBxVerPassword.UseVisualStyleBackColor = true;
             this.chBxVerPassword.CheckedChanged += new System.EventHandler(this.chBxVerPassword_CheckedChanged);
             // 
+            // btnCancelar
+            // 
+            this.btnCancelar.Location = new System.Drawing.Point(148, 411);
+            this.btnCancelar.Name = "btnCancelar";
+            this.btnCancelar.Size = new System.Drawing.Size(114, 40);
+            this.btnCancelar.TabIndex = 8;
+            this.btnCancelar.Text = "Cancelar";
+            this.btnCancelar.UseVisualStyleBackColor = true;
+            this.btnCancelar.Click += new System.EventHandler(this.btnCancelar_Click);
+            // 
             // LoginForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(406, 582);
+            this.ClientSize = new System.Drawing.Size(406, 600);
+            this.Controls.Add(this.btnCancelar);
             this.Controls.Add(this.chBxVerPassword);
             this.Controls.Add(this.picBxPortada);
             this.Controls.Add(this.btnRegister);
@@ -152,5 +165,6 @@
         private System.Windows.Forms.CheckBox chBxRegistrar;
         private System.Windows.Forms.Button btnRegister;
         private System.Windows.Forms.CheckBox chBxVerPassword;
+        private System.Windows.Forms.Button btnCancelar;
     }
 }
