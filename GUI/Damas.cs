@@ -125,16 +125,19 @@ namespace GUI
 
             string piece = partidaManager.GetPieceAt(position);
 
-            // If no piece is selected, select one
+            // Debugging: Print the piece value
+            Console.WriteLine($"Piece at {position.X}, {position.Y}: {piece}");
+
+            // If no piece is selected, attempt to select one
             if (selectedPiece == null)
             {
                 if (piece != null)
                 {
-                    // Get the current player symbol ('X' or 'O') and check if the piece belongs to the current player
-                    char playerSymbol = piece[0]; // 'X' or 'O'
+                    // Validate that the piece belongs to the current player
+                    bool isCurrentPlayerPiece = (partidaManager.GetCurrentPlayer() == 1 && (piece.StartsWith("O") || piece.Contains("(K)"))) ||
+                                                (partidaManager.GetCurrentPlayer() == 2 && (piece.StartsWith("X") || piece.Contains("(K)")));
 
-                    if ((partidaManager.GetCurrentPlayer() == 1 && playerSymbol == 'O') ||
-                        (partidaManager.GetCurrentPlayer() == 2 && playerSymbol == 'X'))
+                    if (isCurrentPlayerPiece)
                     {
                         selectedPiece = clickedTile;
                         selectedPosition = position;
@@ -152,11 +155,12 @@ namespace GUI
             }
             else
             {
-                // Attempt to make a move
+                // Attempt to move the selected piece
                 if (partidaManager.MakeMove(selectedPosition.Value, position))
                 {
                     UpdateBoard();
 
+                    // Check if the game has ended
                     if (partidaManager.CheckEndGame())
                     {
                         MessageBox.Show($"Juego terminado. Ganador: Jugador {partidaManager.GetCurrentPlayer()}");
@@ -173,12 +177,15 @@ namespace GUI
                     MessageBox.Show("Movimiento inválido. Intente de nuevo.");
                 }
 
-                // Reset selection
+                // Reset the selection regardless of move validity
                 selectedPiece.BackColor = (selectedPosition.Value.X + selectedPosition.Value.Y) % 2 == 0 ? Color.White : Color.Black;
                 selectedPiece = null;
                 selectedPosition = null;
             }
         }
+
+
+
 
 
 
