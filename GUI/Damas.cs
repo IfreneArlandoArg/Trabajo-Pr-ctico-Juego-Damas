@@ -120,20 +120,21 @@ namespace GUI
 
         private void Tile_Click(object sender, EventArgs e)
         {
-            try
+            Button clickedTile = sender as Button;
+            Point position = (Point)clickedTile.Tag;
+
+            string piece = partidaManager.GetPieceAt(position);
+
+            // If no piece is selected, select one
+            if (selectedPiece == null)
             {
-                Button clickedTile = sender as Button;
-                if (clickedTile == null) return;
-
-                Point position = (Point)clickedTile.Tag;
-
-                // Check if a piece is already selected
-                if (selectedPiece == null)
+                if (piece != null)
                 {
-                    // Select a piece if it belongs to the current player
-                    string piece = partidaManager.GetPieceAt(position);
-                    if ((partidaManager.GetCurrentPlayer() == 1 && piece == "O") ||
-                        (partidaManager.GetCurrentPlayer() == 2 && piece == "X"))
+                    // Get the current player symbol ('X' or 'O') and check if the piece belongs to the current player
+                    char playerSymbol = piece[0]; // 'X' or 'O'
+
+                    if ((partidaManager.GetCurrentPlayer() == 1 && playerSymbol == 'O') ||
+                        (partidaManager.GetCurrentPlayer() == 2 && playerSymbol == 'X'))
                     {
                         selectedPiece = clickedTile;
                         selectedPosition = position;
@@ -146,42 +147,41 @@ namespace GUI
                 }
                 else
                 {
-                    // Try to move the selected piece
-                    if (partidaManager.MakeMove(selectedPosition.Value, position))
-                    {
-                        // Update the board state after a valid move
-                        UpdateBoard();
+                    MessageBox.Show("Seleccione una pieza válida.");
+                }
+            }
+            else
+            {
+                // Attempt to make a move
+                if (partidaManager.MakeMove(selectedPosition.Value, position))
+                {
+                    UpdateBoard();
 
-                        // Check if the game has ended
-                        if (partidaManager.CheckEndGame())
-                        {
-                            MessageBox.Show($"Juego terminado. Ganador: Jugador {partidaManager.GetCurrentPlayer()}");
-                            partidaManager.EndGame(partidaManager.GetCurrentPlayer());
-                            this.Close();
-                        }
-                        else
-                        {
-                            // Switch turn and update the label
-                            lblTurno.Text = $"Turno: Jugador {partidaManager.GetCurrentPlayer()}";
-                        }
+                    if (partidaManager.CheckEndGame())
+                    {
+                        MessageBox.Show($"Juego terminado. Ganador: Jugador {partidaManager.GetCurrentPlayer()}");
+                        partidaManager.EndGame(partidaManager.GetCurrentPlayer());
+                        this.Close();
                     }
                     else
                     {
-                        // Invalid move; show a message to the player
-                        MessageBox.Show("Movimiento inválido. Intente de nuevo.");
+                        lblTurno.Text = $"Turno: Jugador {partidaManager.GetCurrentPlayer()}";
                     }
-
-                    // Reset selection regardless of whether the move was valid
-                    selectedPiece.BackColor = (selectedPosition.Value.X + selectedPosition.Value.Y) % 2 == 0 ? Color.White : Color.Black;
-                    selectedPiece = null;
-                    selectedPosition = null;
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}");
+                else
+                {
+                    MessageBox.Show("Movimiento inválido. Intente de nuevo.");
+                }
+
+                // Reset selection
+                selectedPiece.BackColor = (selectedPosition.Value.X + selectedPosition.Value.Y) % 2 == 0 ? Color.White : Color.Black;
+                selectedPiece = null;
+                selectedPosition = null;
             }
         }
+
+
+
 
         private void UpdateBoard()
         {

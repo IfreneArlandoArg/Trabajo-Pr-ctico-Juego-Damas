@@ -70,7 +70,7 @@ namespace BLL
             return board[position.X, position.Y];
         }
 
-        public bool IsValidMove(Point from, Point to)
+        private bool IsValidMove(Point from, Point to)
         {
             int rowDiff = to.X - from.X;
             int colDiff = to.Y - from.Y;
@@ -79,14 +79,26 @@ namespace BLL
                 return false; // Out of bounds
 
             string piece = board[from.X, from.Y];
-            if (piece == null || (currentPlayer == 1 && piece != "O") || (currentPlayer == 2 && piece != "X"))
-                return false; // Not a valid piece
+            if (piece == null)
+                return false; // No piece to move
 
-            // Regular move (one step forward diagonally)
-            if (Math.Abs(rowDiff) == 1 && Math.Abs(colDiff) == 1 && board[to.X, to.Y] == null)
+            bool isKing = piece.Contains("(K)");
+            char playerSymbol = piece[0]; // 'O' or 'X'
+
+            // Ensure it's the current player's piece
+            if ((currentPlayer == 1 && playerSymbol != 'O') || (currentPlayer == 2 && playerSymbol != 'X'))
+                return false; // Not the current player's piece
+
+            // For kings, allow all diagonal directions
+            int[] validDirections = isKing ? new int[] { -1, 1 } : new int[] { (playerSymbol == 'O') ? 1 : -1 };
+
+            // Regular move (one step diagonally)
+            if (Math.Abs(rowDiff) == 1 && Math.Abs(colDiff) == 1)
             {
-                if (piece.Contains("(K)") || (currentPlayer == 1 && rowDiff == 1) || (currentPlayer == 2 && rowDiff == -1))
-                    return true;
+                if (Array.Exists(validDirections, d => d == rowDiff))
+                {
+                    return board[to.X, to.Y] == null; // Destination must be empty
+                }
             }
 
             // Capture move (jumping over an opponent)
@@ -96,37 +108,48 @@ namespace BLL
                 int middleCol = from.Y + colDiff / 2;
                 string middlePiece = board[middleRow, middleCol];
 
-                if (middlePiece != null && middlePiece != piece && board[to.X, to.Y] == null)
+                if (middlePiece != null)
                 {
-                    return true;
+                    char middlePlayerSymbol = middlePiece[0];
+
+                    // Ensure middle piece is opponent's
+                    if (middlePlayerSymbol != playerSymbol)
+                    {
+                        return board[to.X, to.Y] == null; // Destination must be empty
+                    }
                 }
             }
 
-            return false;
+            return false; // Invalid move
         }
+
+
 
         public bool MakeMove(Point from, Point to)
         {
             if (!IsValidMove(from, to))
                 return false;
 
-            // Move the piece
             string piece = board[from.X, from.Y];
-            board[to.X, to.Y] = piece;
-            board[from.X, from.Y] = null;
+            board[to.X, to.Y] = piece; // Move the piece
+            board[from.X, from.Y] = null; // Clear the original position
 
-            // Check if it was a capture move
-            if (Math.Abs(to.X - from.X) == 2)
+            // Handle captures
+            if (Math.Abs(to.X - from.X) == 2) // Capture move
             {
                 int middleRow = (from.X + to.X) / 2;
                 int middleCol = (from.Y + to.Y) / 2;
-                board[middleRow, middleCol] = null; // Remove captured piece
+                board[middleRow, middleCol] = null; // Remove the captured piece
             }
 
             // Check for king promotion
-            if ((currentPlayer == 1 && to.X == BoardSize - 1) || (currentPlayer == 2 && to.X == 0))
+            char playerSymbol = piece[0];
+            if ((playerSymbol == 'O' && to.X == BoardSize - 1) || (playerSymbol == 'X' && to.X == 0))
             {
-                board[to.X, to.Y] += " (K)";
+                if (!piece.Contains("(K)")) // Promote only if not already a king
+                {
+                    board[to.X, to.Y] = playerSymbol + " (K)";
+                }
             }
 
             // Log the move
@@ -135,6 +158,9 @@ namespace BLL
             SwitchTurn();
             return true;
         }
+
+
+
 
         private void SwitchTurn()
         {
@@ -190,38 +216,48 @@ namespace BLL
         private bool HasLegalMove(int row, int col)
         {
             string piece = board[row, col];
-            if (piece == null) return false;
+            if (piece == null) return false; // Empty tile, no legal move
 
-            int direction = (piece == "O" || piece == "O (K)") ? 1 : -1; // Forward direction for players
+            bool isKing = piece.Contains("(K)");
+            int[] directions = isKing ? new int[] { -1, 1 } : new int[] { (piece == "O") ? 1 : -1 };
 
-            // Check regular diagonal moves
-            for (int dCol = -1; dCol <= 1; dCol += 2)
+            // Check regular moves
+            foreach (int direction in directions)
             {
-                int newRow = row + direction;
-                int newCol = col + dCol;
-
-                if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
-                    return true;
-            }
-
-            // Check capturing moves
-            for (int dCol = -2; dCol <= 2; dCol += 4)
-            {
-                int middleRow = row + direction;
-                int middleCol = col + dCol / 2;
-                int newRow = row + direction * 2;
-                int newCol = col + dCol;
-
-                if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
+                for (int dCol = -1; dCol <= 1; dCol += 2) // Diagonal moves
                 {
-                    string middlePiece = board[middleRow, middleCol];
-                    if (middlePiece != null && middlePiece[0] != piece[0]) // Opponent's piece
-                        return true;
+                    int newRow = row + direction;
+                    int newCol = col + dCol;
+
+                    if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
+                        return true; // Valid regular move
                 }
             }
 
-            return false;
+            // Check capture moves
+            foreach (int direction in directions)
+            {
+                for (int dCol = -2; dCol <= 2; dCol += 4) // Capturing moves
+                {
+                    int middleRow = row + direction;
+                    int middleCol = col + dCol / 2;
+                    int newRow = row + direction * 2;
+                    int newCol = col + dCol;
+
+                    if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
+                    {
+                        string middlePiece = board[middleRow, middleCol];
+                        if (middlePiece != null && middlePiece[0] != piece[0]) // Opponent's piece
+                            return true;
+                    }
+                }
+            }
+
+            return false; // No valid moves
         }
+
+
+
 
         // Helper method to check bounds
         private bool IsInBounds(int row, int col)
