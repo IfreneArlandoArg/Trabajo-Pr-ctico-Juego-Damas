@@ -21,6 +21,8 @@ namespace GUI
 
         UsuarioBLL usuarioBLL = new UsuarioBLL();
 
+        public int UsuarioID { get; private set; }
+
         public bool Cancelado { get; set; }
 
         public bool Registrado { get; set; }
@@ -42,6 +44,15 @@ namespace GUI
         }
 
 
+        public void Reset()
+        {
+            UsuarioID = 0;
+            Registrado = false;
+            Cancelado = false;
+            countLogin = 0;
+            txtUsername.Clear();
+            txtPassword.Clear();
+        }
 
 
         private void LoginForm_Load(object sender, EventArgs e)
@@ -134,6 +145,9 @@ namespace GUI
                 if (Registrado)
                 {
                     MessageBox.Show($"Bienvenido {jugador.NombreUsuario}!!!");
+
+                    UsuarioID = usuarioBLL.GetUsuario(jugador).JugadorID;
+
 
                     this.Close();
                 }

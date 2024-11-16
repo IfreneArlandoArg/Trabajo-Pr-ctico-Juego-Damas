@@ -14,9 +14,9 @@ namespace BE
         public string Contraseña { get; set; }
 
         
-        public Jugador(int jugadorID, string nombreUsuario, string contraseña)
+        public Jugador(string jugadorID, string nombreUsuario, string contraseña)
         {
-            JugadorID = jugadorID;
+            JugadorID = int.Parse(jugadorID);
             NombreUsuario = nombreUsuario;
             Contraseña = contraseña;
         }

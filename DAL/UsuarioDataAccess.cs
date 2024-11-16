@@ -41,5 +41,27 @@ namespace DAL
                 cmd.ExecuteNonQuery();
             }
         }
+
+        public Jugador GetUsuario(Jugador jugador)
+        {
+            Jugador tempUser = jugador;
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                SqlCommand cmd = new SqlCommand("spGetUsuario", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NombreUsuario", jugador.NombreUsuario);
+                cmd.Parameters.AddWithValue("@Contraseña", jugador.Contraseña);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read()) 
+                {
+                  tempUser = new Jugador(reader["UsuarioID"].ToString(), reader["NombreUsuario"].ToString(), reader["Contraseña"].ToString());
+                }
+            }
+
+            return tempUser;
+        }
     }
 }

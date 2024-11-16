@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BLL;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -15,46 +16,80 @@ namespace GUI
             InitializeComponent();
         }
 
+        PartidaManager partidaManager;
+
         private void Damas_Load(object sender, EventArgs e)
         {
             try
             {
                 LoginForm login = new LoginForm();
+                int jugador1ID = 0, jugador2ID = 0;
 
+                // Player 1 Login
+                MessageBox.Show("Jugador 1, por favor inicie sesión.");
                 while (!login.Registrado)
                 {
                     login.ShowDialog();
+                    if (login.Cancelado)
+                    {
+                        MessageBox.Show("Inicio de sesión cancelado. Cerrando aplicación.");
+                        this.Close();
+                        return;
+                    }
 
                     if (login.countLogin == 3)
                     {
+                        MessageBox.Show("Intentos de inicio de sesión excedidos. Cerrando aplicación.");
                         this.Close();
-                        break;
-                    }
-
-                    if (login.Cancelado)
-                    {
-                        this.Close();
-                        break;
+                        return;
                     }
                 }
+                jugador1ID = login.UsuarioID;
 
-                // Show the Damas form after successful login
-                InitializeBoard();
-                this.Show();
+                // Player 2 Login
+                MessageBox.Show("Jugador 2, por favor inicie sesión.");
+                login.Reset();
+                while (!login.Registrado)
+                {
+                    login.ShowDialog();
+                    if (login.Cancelado)
+                    {
+                        MessageBox.Show("Inicio de sesión cancelado. Cerrando aplicación.");
+                        this.Close();
+                        return;
+                    }
+
+                    if (login.countLogin == 3)
+                    {
+                        MessageBox.Show("Intentos de inicio de sesión excedidos. Cerrando aplicación.");
+                        this.Close();
+                        return;
+                    }
+                }
+                jugador2ID = login.UsuarioID;
+
+                // Initialize game with player IDs
+                partidaManager = new PartidaManager(jugador1ID, jugador2ID);
+
+                // Initialize board
+                InitializeBoard(partidaManager.GetBoardState());
+                lblTurno.Text = $"Turno: Jugador {partidaManager.GetCurrentPlayer()}";
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show($"Error al cargar el juego: {ex.Message}");
+                this.Close();
             }
         }
 
-        private void InitializeBoard()
+
+        private void InitializeBoard(string[,] boardState)
         {
             boardPanel.Controls.Clear();
 
-            for (int row = 0; row < BoardSize; row++)
+            for (int row = 0; row < boardState.GetLength(0); row++)
             {
-                for (int col = 0; col < BoardSize; col++)
+                for (int col = 0; col < boardState.GetLength(1); col++)
                 {
                     Button tile = new Button
                     {
@@ -63,14 +98,14 @@ namespace GUI
                         Location = new Point(col * TileSize, row * TileSize),
                         BackColor = (row + col) % 2 == 0 ? Color.White : Color.Black,
                         FlatStyle = FlatStyle.Flat,
-                        Tag = new Point(row, col) // Store position as a tag
+                        Tag = new Point(row, col)
                     };
 
-                    if ((row < 3 || row > 4) && (row + col) % 2 != 0)
+                    string piece = boardState[row, col];
+                    if (piece != null)
                     {
-                        // Add initial pieces for players
-                        tile.Text = row < 3 ? "O" : "X";
-                        tile.ForeColor = row < 3 ? Color.Red : Color.Blue;
+                        tile.Text = piece;
+                        tile.ForeColor = piece.Contains("O") ? Color.Red : Color.Blue;
                     }
 
                     tile.Click += Tile_Click;
@@ -80,14 +115,92 @@ namespace GUI
             }
         }
 
+        private Button selectedPiece = null;
+        private Point? selectedPosition = null;
+
         private void Tile_Click(object sender, EventArgs e)
         {
-            Button clickedTile = sender as Button;
-            Point position = (Point)clickedTile.Tag;
+            try
+            {
+                Button clickedTile = sender as Button;
+                if (clickedTile == null) return;
 
-            MessageBox.Show($"Tile clicked at position: {position.X}, {position.Y}");
-            // Add move logic here
+                Point position = (Point)clickedTile.Tag;
+
+                // Check if a piece is already selected
+                if (selectedPiece == null)
+                {
+                    // Select a piece if it belongs to the current player
+                    string piece = partidaManager.GetPieceAt(position);
+                    if ((partidaManager.GetCurrentPlayer() == 1 && piece == "O") ||
+                        (partidaManager.GetCurrentPlayer() == 2 && piece == "X"))
+                    {
+                        selectedPiece = clickedTile;
+                        selectedPosition = position;
+                        clickedTile.BackColor = Color.Yellow; // Highlight selected piece
+                    }
+                    else
+                    {
+                        MessageBox.Show("Seleccione una pieza válida.");
+                    }
+                }
+                else
+                {
+                    // Try to move the selected piece
+                    if (partidaManager.MakeMove(selectedPosition.Value, position))
+                    {
+                        // Update the board state after a valid move
+                        UpdateBoard();
+
+                        // Check if the game has ended
+                        if (partidaManager.CheckEndGame())
+                        {
+                            MessageBox.Show($"Juego terminado. Ganador: Jugador {partidaManager.GetCurrentPlayer()}");
+                            partidaManager.EndGame(partidaManager.GetCurrentPlayer());
+                            this.Close();
+                        }
+                        else
+                        {
+                            // Switch turn and update the label
+                            lblTurno.Text = $"Turno: Jugador {partidaManager.GetCurrentPlayer()}";
+                        }
+                    }
+                    else
+                    {
+                        // Invalid move; show a message to the player
+                        MessageBox.Show("Movimiento inválido. Intente de nuevo.");
+                    }
+
+                    // Reset selection regardless of whether the move was valid
+                    selectedPiece.BackColor = (selectedPosition.Value.X + selectedPosition.Value.Y) % 2 == 0 ? Color.White : Color.Black;
+                    selectedPiece = null;
+                    selectedPosition = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}");
+            }
         }
+
+        private void UpdateBoard()
+        {
+            string[,] boardState = partidaManager.GetBoardState();
+            for (int row = 0; row < BoardSize; row++)
+            {
+                for (int col = 0; col < BoardSize; col++)
+                {
+                    string piece = boardState[row, col];
+                    Button tile = boardTiles[row, col];
+
+                    // Update the text and color based on the piece
+                    tile.Text = piece;
+                    tile.ForeColor = piece == "O" || piece == "O (K)" ? Color.Red : Color.Blue;
+                }
+            }
+        }
+
+
 
         private void btnEndGame_Click(object sender, EventArgs e)
         {

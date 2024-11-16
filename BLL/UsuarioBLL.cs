@@ -16,9 +16,15 @@ namespace BLL
             DataAccees.RegistrarUsuario(jugador);
         }
 
-        public bool ValidarCredenciales (string nombreUsuario, string contraseña)
+        public bool ValidarCredenciales(string nombreUsuario, string contraseña)
         {
             return DataAccees.ValidarCredenciales(nombreUsuario, contraseña);
         }
+
+        public Jugador GetUsuario(Jugador jugador) 
+        { 
+           return DataAccees.GetUsuario(jugador);
+        }
+
     }
 }
