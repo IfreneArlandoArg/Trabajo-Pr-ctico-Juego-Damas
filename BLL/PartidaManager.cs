@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using BE;
 using DAL;
 
@@ -17,10 +18,14 @@ namespace BLL
 
         private readonly PartidaDataAccess partidaDataAccess = new PartidaDataAccess();
         private readonly BitacoraDataAccess bitacoraDataAccess = new BitacoraDataAccess();
+        
 
         private int partidaID;
         private int jugador1ID;
         private int jugador2ID;
+
+        public event Action<int> OnWinnerDeclared;
+
 
         public PartidaManager(int jugador1, int jugador2)
         {
@@ -130,34 +135,30 @@ namespace BLL
             if (!IsValidMove(from, to))
                 return false;
 
+            // Move the piece
             string piece = board[from.X, from.Y];
-            board[to.X, to.Y] = piece; // Move the piece
-            board[from.X, from.Y] = null; // Clear the original position
+            board[to.X, to.Y] = piece;
+            board[from.X, from.Y] = null;
 
-            // Handle captures
-            if (Math.Abs(to.X - from.X) == 2) // Capture move
+            // Check for capture move
+            if (Math.Abs(to.X - from.X) == 2)
             {
                 int middleRow = (from.X + to.X) / 2;
                 int middleCol = (from.Y + to.Y) / 2;
-                board[middleRow, middleCol] = null; // Remove the captured piece
+                board[middleRow, middleCol] = null; // Remove captured piece
             }
 
             // Check for king promotion
-            char playerSymbol = piece[0];
-            if ((playerSymbol == 'O' && to.X == BoardSize - 1) || (playerSymbol == 'X' && to.X == 0))
+            if ((currentPlayer == 1 && to.X == BoardSize - 1) || (currentPlayer == 2 && to.X == 0))
             {
-                if (!piece.Contains("(K)")) // Promote only if not already a king
-                {
-                    board[to.X, to.Y] = playerSymbol + " (K)";
-                }
+                board[to.X, to.Y] += " (K)";
             }
 
-            // Log the move
-            bitacoraDataAccess.RegistrarEvento(currentPlayer == 1 ? jugador1ID : jugador2ID, "Movimiento realizado");
-
             SwitchTurn();
+            CheckWinner(); // Check if there's a winner after this move
             return true;
         }
+
 
 
 
@@ -169,86 +170,164 @@ namespace BLL
 
         public bool CheckEndGame()
         {
+            // Count the pieces for both players
+            var (countO, countX) = CountPieces();
+
+            // Debugging: Log the piece counts
+            Console.WriteLine($"Player 1 (O) Pieces: {countO}, Player 2 (X) Pieces: {countX}");
+
+            // Check if a player has no pieces left
+            if (countO == 0)
+            {
+                DeclareWinner(2); // Player 2 wins
+                return true;
+            }
+            else if (countX == 0)
+            {
+                DeclareWinner(1); // Player 1 wins
+                return true;
+            }
+
+            // Check if either player has no valid moves left
             bool player1HasMoves = false;
             bool player2HasMoves = false;
 
-            // Iterate over all board positions
             for (int row = 0; row < BoardSize; row++)
             {
                 for (int col = 0; col < BoardSize; col++)
                 {
                     string piece = board[row, col];
+                    if (piece == null) continue;
 
-                    // Check if Player 1 has any valid moves
-                    if ((piece == "O" || piece == "O (K)") && !player1HasMoves)
-                    {
-                        player1HasMoves = HasLegalMove(row, col);
+                    // Check for valid moves for each player
+                    if (piece.StartsWith("O") && !player1HasMoves) player1HasMoves = HasLegalMove(row, col);
+                    if (piece.StartsWith("X") && !player2HasMoves) player2HasMoves = HasLegalMove(row, col);
 
-                        // Debugging
-                        if (player1HasMoves)
-                            Console.WriteLine($"Player 1 has moves at ({row}, {col})");
-                    }
-
-                    // Check if Player 2 has any valid moves
-                    if ((piece == "X" || piece == "X (K)") && !player2HasMoves)
-                    {
-                        player2HasMoves = HasLegalMove(row, col);
-
-                        // Debugging
-                        if (player2HasMoves)
-                            Console.WriteLine($"Player 2 has moves at ({row}, {col})");
-                    }
-
-                    // If both players have moves, game is not over
-                    if (player1HasMoves && player2HasMoves)
-                    {
-                        return false;
-                    }
+                    // If both players still have moves, no need to continue checking
+                    if (player1HasMoves && player2HasMoves) return false;
                 }
             }
 
-            // Game is over if either player has no moves
-            return !player1HasMoves || !player2HasMoves;
+            // Debugging: Log whether players have moves
+            Console.WriteLine($"Player 1 Has Moves: {player1HasMoves}, Player 2 Has Moves: {player2HasMoves}");
+
+            // Declare the winner if a player has no valid moves
+            if (!player1HasMoves)
+            {
+                DeclareWinner(2); // Player 2 wins
+                return true;
+            }
+            else if (!player2HasMoves)
+            {
+                DeclareWinner(1); // Player 1 wins
+                return true;
+            }
+
+            return false; // Game is not over
         }
+
+
+
+
+
+        private void DeclareWinner(int winnerPlayerID)
+        {
+            // Log the end of the game
+            partidaDataAccess.FinalizarPartida(partidaID, winnerPlayerID, DateTime.Now);
+
+            bitacoraDataAccess.RegistrarEvento(jugador1ID, "Fin de partida");
+            bitacoraDataAccess.RegistrarEvento(jugador2ID, "Fin de partida");
+
+            // Announce the winner
+            MessageBox.Show($"Juego terminado. \nGanador: Jugador {winnerPlayerID}");
+
+            
+        }
+
+
+
+        public void CheckWinner()
+        {
+            var (countO, countX) = CountPieces();
+
+            // Debugging: Log the counts
+            Console.WriteLine($"CountPieces: Player 1 (O) = {countO}, Player 2 (X) = {countX}");
+
+            if (countO == 3)
+            {
+                OnWinnerDeclared?.Invoke(2); // Player 2 wins
+            }
+            else if (countX == 3)
+            {
+                OnWinnerDeclared?.Invoke(1); // Player 1 wins
+            }
+        }
+
+        private (int countO, int countX) CountPieces()
+        {
+            int countO = 0; // Count for Player 1
+            int countX = 0; // Count for Player 2
+
+            for (int row = 0; row < BoardSize; row++)
+            {
+                for (int col = 0; col < BoardSize; col++)
+                {
+                    string piece = board[row, col];
+                    if (piece == null) continue;
+
+                    if (piece.StartsWith("O")) countO++; // Count Player 1 pieces
+                    if (piece.StartsWith("X")) countX++; // Count Player 2 pieces
+                }
+            }
+
+            return (countO, countX);
+        }
+
+
+
 
 
 
         private bool HasLegalMove(int row, int col)
         {
             string piece = board[row, col];
-            if (piece == null) return false; // Empty tile, no legal move
+            if (piece == null) return false; // No piece here
 
             bool isKing = piece.Contains("(K)");
-            int[] directions = isKing ? new int[] { -1, 1 } : new int[] { (piece == "O") ? 1 : -1 };
+            int[] directions = isKing ? new int[] { -1, 1 } : new int[] { (piece.StartsWith("O") ? 1 : -1) };
 
-            // Check regular moves
+            // Check for regular moves
             foreach (int direction in directions)
             {
-                for (int dCol = -1; dCol <= 1; dCol += 2) // Diagonal moves
+                for (int dCol = -1; dCol <= 1; dCol += 2) // Diagonal directions
                 {
                     int newRow = row + direction;
                     int newCol = col + dCol;
 
                     if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
-                        return true; // Valid regular move
+                    {
+                        return true; // Valid move
+                    }
                 }
             }
 
-            // Check capture moves
+            // Check for capture moves
             foreach (int direction in directions)
             {
                 for (int dCol = -2; dCol <= 2; dCol += 4) // Capturing moves
                 {
-                    int middleRow = row + direction;
+                    int middleRow = row + direction / 2;
                     int middleCol = col + dCol / 2;
-                    int newRow = row + direction * 2;
+                    int newRow = row + direction;
                     int newCol = col + dCol;
 
                     if (IsInBounds(newRow, newCol) && board[newRow, newCol] == null)
                     {
                         string middlePiece = board[middleRow, middleCol];
-                        if (middlePiece != null && middlePiece[0] != piece[0]) // Opponent's piece
-                            return true;
+                        if (middlePiece != null && middlePiece[0] != piece[0])
+                        {
+                            return true; // Valid capture
+                        }
                     }
                 }
             }
@@ -275,6 +354,9 @@ namespace BLL
             bitacoraDataAccess.RegistrarEvento(jugador1ID, "Fin de partida");
             bitacoraDataAccess.RegistrarEvento(jugador2ID, "Fin de partida");
         }
+
+
+
     }
 }
 

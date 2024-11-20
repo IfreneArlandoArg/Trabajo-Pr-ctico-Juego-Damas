@@ -1,4 +1,5 @@
-﻿using BLL;
+﻿using BE;
+using BLL;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -10,6 +11,7 @@ namespace GUI
         private const int BoardSize = 8;
         private const int TileSize = 50;
         private Button[,] boardTiles = new Button[BoardSize, BoardSize];
+        int jugador1ID = 0, jugador2ID = 0;
 
         public Damas()
         {
@@ -17,13 +19,24 @@ namespace GUI
         }
 
         PartidaManager partidaManager;
+        UsuarioBLL usuarioBLL = new UsuarioBLL();
+
+        private void HandleWinnerDeclared(int winnerPlayerID)
+        {
+            int IdGanador = winnerPlayerID == 1 ? jugador1ID : jugador2ID;
+            Jugador tempUser = usuarioBLL.GetUsuario(IdGanador);
+
+            MessageBox.Show($"Juego terminado. \nGanador: {tempUser.NombreUsuario}");
+            MessageBox.Show($"\"Hay qué cerrar el estadio, los genios hacen esto...\"");
+            this.Close();
+        }
 
         private void Damas_Load(object sender, EventArgs e)
         {
             try
             {
                 LoginForm login = new LoginForm();
-                int jugador1ID = 0, jugador2ID = 0;
+              //  int jugador1ID = 0, jugador2ID = 0;
 
                 // Player 1 Login
                 MessageBox.Show("Jugador 1, por favor inicie sesión.");
@@ -70,6 +83,8 @@ namespace GUI
 
                 // Initialize game with player IDs
                 partidaManager = new PartidaManager(jugador1ID, jugador2ID);
+                partidaManager.OnWinnerDeclared += HandleWinnerDeclared;
+
 
                 // Initialize board
                 InitializeBoard(partidaManager.GetBoardState());
@@ -159,6 +174,8 @@ namespace GUI
                 if (partidaManager.MakeMove(selectedPosition.Value, position))
                 {
                     UpdateBoard();
+                    partidaManager.CheckWinner();
+
 
                     // Check if the game has ended
                     if (partidaManager.CheckEndGame())

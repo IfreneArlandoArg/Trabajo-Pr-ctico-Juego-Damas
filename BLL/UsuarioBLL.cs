@@ -26,5 +26,9 @@ namespace BLL
            return DataAccees.GetUsuario(jugador);
         }
 
+        public Jugador GetUsuario(int UsuarioID)
+        {
+            return DataAccees.GetUsuario(UsuarioID);
+        }
     }
 }

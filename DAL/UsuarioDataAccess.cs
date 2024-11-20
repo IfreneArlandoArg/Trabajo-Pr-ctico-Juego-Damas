@@ -55,10 +55,36 @@ namespace DAL
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                while (reader.Read()) 
+                while (reader.Read())
                 {
-                  tempUser = new Jugador(reader["UsuarioID"].ToString(), reader["NombreUsuario"].ToString(), reader["Contraseña"].ToString());
+                    tempUser = new Jugador(reader["UsuarioID"].ToString(), reader["NombreUsuario"].ToString(), reader["Contraseña"].ToString());
                 }
+            }
+
+            return tempUser;
+        }
+
+        public Jugador GetUsuario(int UsusarioID)
+        {
+            Jugador tempUser = null;
+
+            using (SqlConnection conn = new SqlConnection(connectionString)) 
+            {
+                SqlCommand cmd = new SqlCommand("spGetUsuarioByID", conn);
+                cmd.CommandType= CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@ID", UsusarioID);
+
+
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    tempUser = new Jugador(reader["UsuarioID"].ToString(), reader["NombreUsuario"].ToString(), reader["Contraseña"].ToString());
+                }
+
             }
 
             return tempUser;
